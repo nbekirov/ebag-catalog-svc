@@ -1,0 +1,13 @@
+# Python bytecode cache
+__pycache__/
+*.py[cod]
+
+# uv-managed virtual environment
+.venv/
+
+# Django local dev DB — real DB runs in a container, never shared
+db.sqlite3
+db.sqlite3-journal
+
+# environment variables, if/when we add a .env
+.env
