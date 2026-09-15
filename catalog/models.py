@@ -61,7 +61,7 @@ class Product(models.Model):
     description = models.TextField(default='', blank=True)
     image_url = models.TextField(null=True, blank=True)
     sku = models.CharField(max_length=255, unique=True, validators=[MinLengthValidator(3)])
-    price_cents = models.PositiveIntegerField()
+    price_cents = models.PositiveIntegerField(db_index=True)
     currency = models.CharField(max_length=3, choices=Currency.choices, default=Currency.EUR)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)

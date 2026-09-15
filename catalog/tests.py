@@ -288,6 +288,53 @@ class ProductSearchTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual([product['id'] for product in response.data['results']], [self.still_water.id])
 
+    def test_matches_price_from_minimum(self):
+        response = self.client.get(reverse('product-list'), {'price_cents_min': 349})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [product['id'] for product in response.data['results']],
+            [self.orange_juice.id, self.sea_bass.id, self.mackerel.id],
+        )
+
+    def test_matches_price_up_to_maximum(self):
+        response = self.client.get(reverse('product-list'), {'price_cents_max': 199})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [product['id'] for product in response.data['results']],
+            [self.still_water.id, self.sparkling_water.id, self.watermelon.id],
+        )
+
+    def test_matches_price_within_range(self):
+        response = self.client.get(reverse('product-list'), {'price_cents_min': 129, 'price_cents_max': 349})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [product['id'] for product in response.data['results']],
+            [self.sparkling_water.id, self.orange_juice.id, self.dish_soap.id, self.watermelon.id],
+        )
+
+    def test_finds_nothing_when_minimum_exceeds_maximum(self):
+        response = self.client.get(reverse('product-list'), {'price_cents_min': 349, 'price_cents_max': 129})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'count': 0, 'next': None, 'previous': None, 'results': []})
+
+    def test_rejects_negative_price(self):
+        response = self.client.get(reverse('product-list'), {'price_cents_min': -1})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data, {'price_cents_min': ['Ensure this value is greater than or equal to 0.']}
+        )
+
+    def test_rejects_non_integer_price(self):
+        response = self.client.get(reverse('product-list'), {'price_cents_max': '9.99'})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'price_cents_max': ['A valid integer is required.']})
+
     def test_ignores_unknown_parameters(self):
         response = self.client.get(reverse('product-list'), {'colour': 'blue'})
 
