@@ -1,5 +1,25 @@
 from django.core.validators import MinLengthValidator
 from django.db import models
+from django.db.models.expressions import RawSQL
+
+
+class CategoryQuerySet(models.QuerySet):
+    def ancestors_of(self, category_id):
+        """The category with this id and every category above it, up to the root."""
+        return self.filter(
+            id__in=RawSQL(
+                """
+                WITH RECURSIVE ancestors AS (
+                    SELECT id, parent_id FROM catalog_category WHERE id = %s
+                  UNION ALL
+                    SELECT c.id, c.parent_id FROM catalog_category c
+                    JOIN ancestors a ON c.id = a.parent_id
+                )
+                SELECT id FROM ancestors
+                """,
+                [category_id],
+            )
+        )
 
 
 class Category(models.Model):
@@ -9,6 +29,8 @@ class Category(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = CategoryQuerySet.as_manager()
 
     class Meta:
         ordering = ['id']
@@ -24,6 +46,9 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+    def is_ancestor_of(self, other):
+        return Category.objects.ancestors_of(other.id).filter(pk=self.pk).exists()
 
 
 class Product(models.Model):

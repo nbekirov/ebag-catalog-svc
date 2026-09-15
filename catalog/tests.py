@@ -348,6 +348,51 @@ class CategoryUpdateTests(APITestCase):
         juice.refresh_from_db()
         self.assertEqual(juice.name, 'Juice')
 
+    def test_moves_under_another_parent(self):
+        drinks = Category.objects.create(name='Drinks')
+        food = Category.objects.create(name='Food')
+        water = Category.objects.create(name='Water', parent=drinks)
+
+        response = self.client.patch(reverse('category-detail', args=[water.id]), {'parent_id': food.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        water.refresh_from_db()
+        self.assertEqual(water.parent, food)
+        self.assertEqual(
+            response.data,
+            {
+                'id': water.id,
+                'name': 'Water',
+                'parent_id': food.id,
+                'created_at': water.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': water.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
+    def test_rejects_self_as_parent(self):
+        drinks = Category.objects.create(name='Drinks')
+
+        response = self.client.patch(reverse('category-detail', args=[drinks.id]), {'parent_id': drinks.id})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'parent_id': ['A category cannot be its own ancestor.']})
+        drinks.refresh_from_db()
+        self.assertIsNone(drinks.parent)
+
+    def test_rejects_descendant_as_parent(self):
+        drinks = Category.objects.create(name='Drinks')
+        water = Category.objects.create(name='Water', parent=drinks)
+        sparkling = Category.objects.create(name='Sparkling', parent=water)
+
+        response = self.client.patch(
+            reverse('category-detail', args=[drinks.id]), {'parent_id': sparkling.id}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'parent_id': ['A category cannot be its own ancestor.']})
+        drinks.refresh_from_db()
+        self.assertIsNone(drinks.parent)
+
     def test_patches_partially(self):
         drinks = Category.objects.create(name='Drinks')
         water = Category.objects.create(name='Water', parent=drinks)

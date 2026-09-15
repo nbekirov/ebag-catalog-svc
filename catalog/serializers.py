@@ -12,6 +12,11 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'name', 'parent_id', 'created_at', 'updated_at']
 
+    def validate_parent_id(self, parent):
+        if parent is not None and self.instance is not None and self.instance.is_ancestor_of(parent):
+            raise serializers.ValidationError('A category cannot be its own ancestor.')
+        return parent
+
 
 class ProductSerializer(serializers.ModelSerializer):
     image_url = serializers.URLField(allow_null=True, required=False)
