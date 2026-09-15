@@ -10,6 +10,7 @@ class Category(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        ordering = ['id']
         verbose_name_plural = 'Categories'
 
     def __str__(self):
@@ -26,6 +27,9 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['id']
 
     def __str__(self):
         return self.title
