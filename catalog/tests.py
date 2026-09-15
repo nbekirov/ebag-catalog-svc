@@ -218,6 +218,13 @@ class CategoryCreateTests(APITestCase):
             },
         )
 
+    def test_rejects_short_name(self):
+        response = self.client.post(reverse('category-list'), {'name': 'Dr'})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['name'])
+        self.assertFalse(Category.objects.exists())
+
     def test_rejects_missing_name(self):
         response = self.client.post(reverse('category-list'), {'parent_id': None})
 
