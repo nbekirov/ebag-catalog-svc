@@ -68,22 +68,75 @@ class ProductListTests(APITestCase):
 
     def test_lists_products(self):
         category = Category.objects.create(name='Drinks')
-        skus = ['DRK-WAT-001', 'DRK-WAT-002', 'DRK-JUI-001']
-        products = [
-            Product.objects.create(title=sku, sku=sku, price_cents=99, category=category)
-            for sku in skus
+        rows = [
+            {'title': 'Still Water 1.5L', 'sku': 'DRK-WAT-001', 'price_cents': 99},
+            {'title': 'Sparkling Water 1.5L', 'sku': 'DRK-WAT-002', 'price_cents': 1000},
+            {'title': 'Orange Juice 1L', 'sku': 'DRK-JUI-001', 'price_cents': 1383},
         ]
-        Product.objects.filter(pk=products[1].pk).update(price_cents=129)
+        products = [
+            Product.objects.create(
+                description=f'{row["title"]} description',
+                image_url=f'https://example.com/{row["sku"]}.jpg',
+                category=category,
+                **row,
+            )
+            for row in rows
+        ]
+        Product.objects.filter(pk=products[1].pk).update(price_cents=0)
+        products[1].refresh_from_db()
 
         response = self.client.get(reverse('product-list'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 3)
-        results = response.data['results']
-        self.assertEqual([p['id'] for p in results], [p.id for p in products])
-        self.assertEqual([p['sku'] for p in results], skus)
-        self.assertEqual(results[1]['price_cents'], 129)
-        self.assertEqual(results[0]['category_id'], category.id)
+        self.assertEqual(
+            response.data,
+            {
+                'count': 3,
+                'next': None,
+                'previous': None,
+                'results': [
+                    {
+                        'id': products[0].id,
+                        'title': 'Still Water 1.5L',
+                        'description': 'Still Water 1.5L description',
+                        'image_url': 'https://example.com/DRK-WAT-001.jpg',
+                        'sku': 'DRK-WAT-001',
+                        'price_cents': 99,
+                        'price_display': '0.99',
+                        'currency': 'EUR',
+                        'category_id': category.id,
+                        'created_at': products[0].created_at.isoformat().replace('+00:00', 'Z'),
+                        'updated_at': products[0].updated_at.isoformat().replace('+00:00', 'Z'),
+                    },
+                    {
+                        'id': products[1].id,
+                        'title': 'Sparkling Water 1.5L',
+                        'description': 'Sparkling Water 1.5L description',
+                        'image_url': 'https://example.com/DRK-WAT-002.jpg',
+                        'sku': 'DRK-WAT-002',
+                        'price_cents': 0,
+                        'price_display': '0.00',
+                        'currency': 'EUR',
+                        'category_id': category.id,
+                        'created_at': products[1].created_at.isoformat().replace('+00:00', 'Z'),
+                        'updated_at': products[1].updated_at.isoformat().replace('+00:00', 'Z'),
+                    },
+                    {
+                        'id': products[2].id,
+                        'title': 'Orange Juice 1L',
+                        'description': 'Orange Juice 1L description',
+                        'image_url': 'https://example.com/DRK-JUI-001.jpg',
+                        'sku': 'DRK-JUI-001',
+                        'price_cents': 1383,
+                        'price_display': '13.83',
+                        'currency': 'EUR',
+                        'category_id': category.id,
+                        'created_at': products[2].created_at.isoformat().replace('+00:00', 'Z'),
+                        'updated_at': products[2].updated_at.isoformat().replace('+00:00', 'Z'),
+                    },
+                ],
+            },
+        )
 
     def test_paginated(self):
         category = Category.objects.create(name='Drinks')

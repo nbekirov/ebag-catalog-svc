@@ -33,3 +33,8 @@ class Product(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def price_display(self):
+        units, cents = divmod(self.price_cents, 100)
+        return f'{units}.{cents:02d}'
