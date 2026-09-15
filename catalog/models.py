@@ -5,7 +5,7 @@ from django.db import models
 class Category(models.Model):
     name = models.CharField(max_length=255, validators=[MinLengthValidator(3)])
     parent = models.ForeignKey(
-        'self', null=True, blank=True, on_delete=models.CASCADE, related_name='children'
+        'self', null=True, blank=True, on_delete=models.PROTECT, related_name='children'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -28,7 +28,7 @@ class Product(models.Model):
     sku = models.CharField(max_length=255, unique=True, validators=[MinLengthValidator(3)])
     price_cents = models.PositiveIntegerField()
     currency = models.CharField(max_length=3, choices=Currency.choices, default=Currency.EUR)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

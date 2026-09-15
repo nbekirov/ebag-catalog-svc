@@ -333,6 +333,27 @@ class CategoryDeleteTests(APITestCase):
         self.assertFalse(Category.objects.filter(pk=water.id).exists())
         self.assertTrue(Category.objects.filter(pk=drinks.id).exists())
 
+    def test_rejects_category_with_children(self):
+        drinks = Category.objects.create(name='Drinks')
+        Category.objects.create(name='Water', parent=drinks)
+
+        response = self.client.delete(reverse('category-detail', args=[drinks.id]))
+
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.data, {'detail': 'Category still has products or child categories.'})
+        self.assertEqual(Category.objects.count(), 2)
+
+    def test_rejects_category_with_products(self):
+        drinks = Category.objects.create(name='Drinks')
+        Product.objects.create(title='Still Water 1.5L', sku='DRK-WAT-001', price_cents=99, category=drinks)
+
+        response = self.client.delete(reverse('category-detail', args=[drinks.id]))
+
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.data, {'detail': 'Category still has products or child categories.'})
+        self.assertTrue(Category.objects.filter(pk=drinks.id).exists())
+        self.assertEqual(Product.objects.count(), 1)
+
     def test_not_found(self):
         response = self.client.delete(reverse('category-detail', args=[999]))
 

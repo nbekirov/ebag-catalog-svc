@@ -1,7 +1,14 @@
+from django.db.models import ProtectedError
+from rest_framework.exceptions import APIException
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 from catalog.models import Category, Product
 from catalog.serializers import CategorySerializer, ProductSerializer
+
+
+class CategoryInUse(APIException):
+    status_code = 409
+    default_detail = 'Category still has products or child categories.'
 
 
 class CategoryListAPIView(ListCreateAPIView):
@@ -13,6 +20,12 @@ class CategoryListAPIView(ListCreateAPIView):
 class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    def perform_destroy(self, instance):
+        try:
+            instance.delete()
+        except ProtectedError:
+            raise CategoryInUse
 
 
 class ProductListAPIView(ListCreateAPIView):
