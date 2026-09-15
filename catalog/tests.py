@@ -194,6 +194,7 @@ class ProductSearchTests(APITestCase):
         fish = Category.objects.create(name='Fish', parent=groceries)
         fillets = Category.objects.create(name='Fillets', parent=fish)
         household = Category.objects.create(name='Household')
+        cls.groceries, cls.drinks, cls.juice, cls.fish, cls.fillets = groceries, drinks, juice, fish, fillets
         rows = [
             ('still_water', 'Still Water 1.5L', 'DRK-WAT-001', 99, water),
             ('sparkling_water', 'Sparkling Water 1.5L', 'DRK-WAT-002', 129, sparkling),
@@ -334,6 +335,69 @@ class ProductSearchTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {'price_cents_max': ['A valid integer is required.']})
+
+    def test_matches_category(self):
+        response = self.client.get(reverse('product-list'), {'category': self.juice.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([product['id'] for product in response.data['results']], [self.orange_juice.id])
+
+    def test_matches_category_including_subcategories(self):
+        response = self.client.get(reverse('product-list'), {'category': self.drinks.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [product['id'] for product in response.data['results']],
+            [self.still_water.id, self.sparkling_water.id, self.orange_juice.id],
+        )
+
+    def test_matches_top_level_category_including_all_levels(self):
+        response = self.client.get(reverse('product-list'), {'category': self.groceries.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [product['id'] for product in response.data['results']],
+            [
+                self.still_water.id,
+                self.sparkling_water.id,
+                self.orange_juice.id,
+                self.sea_bass.id,
+                self.mackerel.id,
+                self.watermelon.id,
+            ],
+        )
+
+    def test_finds_nothing_for_unknown_category(self):
+        response = self.client.get(reverse('product-list'), {'category': 999})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'count': 0, 'next': None, 'previous': None, 'results': []})
+
+    def test_rejects_non_integer_category(self):
+        response = self.client.get(reverse('product-list'), {'category': 'drinks'})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'category': ['A valid integer is required.']})
+
+    def test_combines_category_and_title(self):
+        response = self.client.get(reverse('product-list'), {'category': self.fish.id, 'title': 'fillet'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([product['id'] for product in response.data['results']], [self.sea_bass.id])
+
+    def test_keeps_filters_in_pagination_links(self):
+        response = self.client.get(reverse('product-list'), {'category': self.drinks.id, 'limit': 2})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3)
+        self.assertEqual(
+            [product['id'] for product in response.data['results']],
+            [self.still_water.id, self.sparkling_water.id],
+        )
+        self.assertEqual(
+            response.data['next'],
+            f'http://testserver/api/v1/products/?category={self.drinks.id}&limit=2&offset=2',
+        )
 
     def test_ignores_unknown_parameters(self):
         response = self.client.get(reverse('product-list'), {'colour': 'blue'})

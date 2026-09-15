@@ -24,6 +24,25 @@ class CategoryQuerySet(models.QuerySet):
         )
 
 
+class ProductQuerySet(models.QuerySet):
+    def in_category_tree(self, category_id):
+        """Products in the category with this id or in any category below it."""
+        return self.filter(
+            category_id__in=RawSQL(
+                """
+                WITH RECURSIVE descendants AS (
+                    SELECT id FROM catalog_category WHERE id = %s
+                  UNION ALL
+                    SELECT c.id FROM catalog_category c
+                    JOIN descendants d ON c.parent_id = d.id
+                )
+                SELECT id FROM descendants
+                """,
+                [category_id],
+            )
+        )
+
+
 class Category(models.Model):
     name = models.CharField(max_length=255, validators=[MinLengthValidator(3)])
     parent = models.ForeignKey(
@@ -66,6 +85,8 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = ProductQuerySet.as_manager()
 
     class Meta:
         ordering = ['id']

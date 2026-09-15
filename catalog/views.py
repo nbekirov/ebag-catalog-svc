@@ -44,6 +44,8 @@ class ProductListAPIView(ListCreateAPIView):
             queryset = queryset.filter(price_cents__gte=params['price_cents_min'])
         if 'price_cents_max' in params:
             queryset = queryset.filter(price_cents__lte=params['price_cents_max'])
+        if 'category' in params:
+            queryset = queryset.in_category_tree(params['category'])
         return queryset
 
 

@@ -37,3 +37,4 @@ class ProductSearchSerializer(serializers.Serializer):
     sku = serializers.CharField(required=False)
     price_cents_min = serializers.IntegerField(required=False, min_value=0)
     price_cents_max = serializers.IntegerField(required=False, min_value=0)
+    category = serializers.IntegerField(required=False)
