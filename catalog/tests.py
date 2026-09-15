@@ -384,6 +384,50 @@ class ProductCreateTests(APITestCase):
         self.assertEqual(list(response.data), ['title'])
         self.assertFalse(Product.objects.exists())
 
+    def test_rejects_short_sku(self):
+        category = Category.objects.create(name='Drinks')
+        payload = {
+            'title': 'Still Water 1.5L',
+            'description': 'Natural spring water',
+            'image_url': 'https://example.com/water.jpg',
+            'sku': 'DR',
+            'price_cents': 99,
+            'currency': 'EUR',
+            'category_id': category.id,
+        }
+
+        response = self.client.post(reverse('product-list'), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['sku'])
+        self.assertFalse(Product.objects.exists())
+
+    def test_rejects_duplicate_sku(self):
+        category = Category.objects.create(name='Drinks')
+        Product.objects.create(
+            title='Still Water 1.5L',
+            description='Natural spring water',
+            image_url='https://example.com/water.jpg',
+            sku='DRK-WAT-001',
+            price_cents=99,
+            category=category,
+        )
+        payload = {
+            'title': 'Sparkling Water 1.5L',
+            'description': 'Carbonated spring water',
+            'image_url': 'https://example.com/sparkling.jpg',
+            'sku': 'DRK-WAT-001',
+            'price_cents': 109,
+            'currency': 'EUR',
+            'category_id': category.id,
+        }
+
+        response = self.client.post(reverse('product-list'), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['sku'])
+        self.assertEqual(Product.objects.count(), 1)
+
     def test_rejects_missing_required_fields(self):
         response = self.client.post(reverse('product-list'), {'description': 'Natural spring water'})
 

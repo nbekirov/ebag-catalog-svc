@@ -22,7 +22,7 @@ class Product(models.Model):
     title = models.CharField(max_length=255, validators=[MinLengthValidator(3)])
     description = models.TextField(default='', blank=True)
     image_url = models.TextField(null=True, blank=True)
-    sku = models.CharField(max_length=255)
+    sku = models.CharField(max_length=255, unique=True, validators=[MinLengthValidator(3)])
     price_cents = models.IntegerField()
     currency = models.CharField(max_length=3, default='EUR')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
