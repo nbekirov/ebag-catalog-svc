@@ -183,6 +183,56 @@ class ProductListTests(APITestCase):
         self.assertIsNone(data['next'])
 
 
+class CategoryCreateTests(APITestCase):
+    def test_creates_top_level(self):
+        response = self.client.post(reverse('category-list'), {'name': 'Drinks'})
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        category = Category.objects.get()
+        self.assertEqual(
+            response.data,
+            {
+                'id': category.id,
+                'name': 'Drinks',
+                'parent_id': None,
+                'created_at': category.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': category.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
+    def test_creates_child(self):
+        drinks = Category.objects.create(name='Drinks')
+
+        response = self.client.post(reverse('category-list'), {'name': 'Water', 'parent_id': drinks.id})
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        water = Category.objects.get(name='Water')
+        self.assertEqual(
+            response.data,
+            {
+                'id': water.id,
+                'name': 'Water',
+                'parent_id': drinks.id,
+                'created_at': water.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': water.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
+    def test_rejects_missing_name(self):
+        response = self.client.post(reverse('category-list'), {'parent_id': None})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['name'])
+        self.assertFalse(Category.objects.exists())
+
+    def test_rejects_unknown_parent(self):
+        response = self.client.post(reverse('category-list'), {'name': 'Water', 'parent_id': 999})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['parent_id'])
+        self.assertFalse(Category.objects.exists())
+
+
 class CategoryDetailTests(APITestCase):
     def test_found(self):
         drinks = Category.objects.create(name='Drinks')
@@ -206,6 +256,58 @@ class CategoryDetailTests(APITestCase):
         response = self.client.get(reverse('category-detail', args=[999]))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class ProductCreateTests(APITestCase):
+    def test_creates(self):
+        category = Category.objects.create(name='Drinks')
+        payload = {
+            'title': 'Still Water 1.5L',
+            'description': 'Natural spring water',
+            'image_url': 'https://example.com/water.jpg',
+            'sku': 'DRK-WAT-001',
+            'price_cents': 99,
+            'currency': 'EUR',
+            'category_id': category.id,
+        }
+
+        response = self.client.post(reverse('product-list'), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        product = Product.objects.get()
+        self.assertEqual(
+            response.data,
+            {
+                'id': product.id,
+                'title': 'Still Water 1.5L',
+                'description': 'Natural spring water',
+                'image_url': 'https://example.com/water.jpg',
+                'sku': 'DRK-WAT-001',
+                'price_cents': 99,
+                'price_display': '0.99',
+                'currency': 'EUR',
+                'category_id': category.id,
+                'created_at': product.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': product.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
+    def test_rejects_missing_required_fields(self):
+        response = self.client.post(reverse('product-list'), {'description': 'Natural spring water'})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(sorted(response.data), ['category_id', 'price_cents', 'sku', 'title'])
+        self.assertFalse(Product.objects.exists())
+
+    def test_rejects_unknown_category(self):
+        response = self.client.post(
+            reverse('product-list'),
+            {'title': 'Still Water 1.5L', 'sku': 'DRK-WAT-001', 'price_cents': 99, 'category_id': 999},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['category_id'])
+        self.assertFalse(Product.objects.exists())
 
 
 class ProductDetailTests(APITestCase):

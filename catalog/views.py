@@ -1,10 +1,10 @@
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 
 from catalog.models import Category, Product
 from catalog.serializers import CategorySerializer, ProductSerializer
 
 
-class CategoryListAPIView(ListAPIView):
+class CategoryListAPIView(ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = None
@@ -15,7 +15,7 @@ class CategoryDetailAPIView(RetrieveAPIView):
     serializer_class = CategorySerializer
 
 
-class ProductListAPIView(ListAPIView):
+class ProductListAPIView(ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 

@@ -93,6 +93,7 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'catalog.pagination.DefaultLimitOffsetPagination',
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
 
 
