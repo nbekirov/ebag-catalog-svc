@@ -398,6 +398,39 @@ class ProductCreateTests(APITestCase):
             },
         )
 
+    def test_creates_free_product(self):
+        category = Category.objects.create(name='Drinks')
+        payload = {
+            'title': 'Paper Bag',
+            'description': 'Free with every order',
+            'image_url': 'https://example.com/bag.jpg',
+            'sku': 'PKG-BAG-001',
+            'price_cents': 0,
+            'currency': 'EUR',
+            'category_id': category.id,
+        }
+
+        response = self.client.post(reverse('product-list'), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        product = Product.objects.get()
+        self.assertEqual(
+            response.data,
+            {
+                'id': product.id,
+                'title': 'Paper Bag',
+                'description': 'Free with every order',
+                'image_url': 'https://example.com/bag.jpg',
+                'sku': 'PKG-BAG-001',
+                'price_cents': 0,
+                'price_display': '0.00',
+                'currency': 'EUR',
+                'category_id': category.id,
+                'created_at': product.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': product.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
     def test_rejects_short_title(self):
         category = Category.objects.create(name='Drinks')
         payload = {
@@ -476,6 +509,42 @@ class ProductCreateTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(list(response.data), ['image_url'])
+        self.assertFalse(Product.objects.exists())
+
+    def test_rejects_negative_price(self):
+        category = Category.objects.create(name='Drinks')
+        payload = {
+            'title': 'Still Water 1.5L',
+            'description': 'Natural spring water',
+            'image_url': 'https://example.com/water.jpg',
+            'sku': 'DRK-WAT-001',
+            'price_cents': -1,
+            'currency': 'EUR',
+            'category_id': category.id,
+        }
+
+        response = self.client.post(reverse('product-list'), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['price_cents'])
+        self.assertFalse(Product.objects.exists())
+
+    def test_rejects_unknown_currency(self):
+        category = Category.objects.create(name='Drinks')
+        payload = {
+            'title': 'Still Water 1.5L',
+            'description': 'Natural spring water',
+            'image_url': 'https://example.com/water.jpg',
+            'sku': 'DRK-WAT-001',
+            'price_cents': 99,
+            'currency': 'USD',
+            'category_id': category.id,
+        }
+
+        response = self.client.post(reverse('product-list'), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['currency'])
         self.assertFalse(Product.objects.exists())
 
     def test_rejects_missing_required_fields(self):
