@@ -181,3 +181,66 @@ class ProductListTests(APITestCase):
         self.assertEqual([p['id'] for p in data['results']], ids)
         self.assertIsNone(data['previous'])
         self.assertIsNone(data['next'])
+
+
+class CategoryDetailTests(APITestCase):
+    def test_found(self):
+        drinks = Category.objects.create(name='Drinks')
+        water = Category.objects.create(name='Water', parent=drinks)
+
+        response = self.client.get(reverse('category-detail', args=[water.id]))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data,
+            {
+                'id': water.id,
+                'name': 'Water',
+                'parent_id': drinks.id,
+                'created_at': water.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': water.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
+    def test_not_found(self):
+        response = self.client.get(reverse('category-detail', args=[999]))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class ProductDetailTests(APITestCase):
+    def test_found(self):
+        category = Category.objects.create(name='Drinks')
+        product = Product.objects.create(
+            title='Still Water 1.5L',
+            description='Natural spring water',
+            image_url='https://example.com/water.jpg',
+            sku='DRK-WAT-001',
+            price_cents=99,
+            category=category,
+        )
+
+        response = self.client.get(reverse('product-detail', args=[product.id]))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data,
+            {
+                'id': product.id,
+                'title': 'Still Water 1.5L',
+                'description': 'Natural spring water',
+                'image_url': 'https://example.com/water.jpg',
+                'sku': 'DRK-WAT-001',
+                'price_cents': 99,
+                'price_display': '0.99',
+                'currency': 'EUR',
+                'category_id': category.id,
+                'created_at': product.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': product.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
+    def test_not_found(self):
+        response = self.client.get(reverse('product-detail', args=[999]))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
