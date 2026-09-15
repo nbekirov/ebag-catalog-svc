@@ -38,6 +38,8 @@ class ProductListAPIView(ListCreateAPIView):
         params = search.validated_data
         if 'title' in params:
             queryset = queryset.filter(title__icontains=params['title'])
+        if 'sku' in params:
+            queryset = queryset.filter(sku=params['sku'])
         return queryset
 
 

@@ -264,6 +264,30 @@ class ProductSearchTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 7)
 
+    def test_matches_exact_sku(self):
+        response = self.client.get(reverse('product-list'), {'sku': 'DRK-WAT-002'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([product['id'] for product in response.data['results']], [self.sparkling_water.id])
+
+    def test_does_not_match_part_of_sku(self):
+        response = self.client.get(reverse('product-list'), {'sku': 'DRK-WAT'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'count': 0, 'next': None, 'previous': None, 'results': []})
+
+    def test_matches_sku_case_sensitively(self):
+        response = self.client.get(reverse('product-list'), {'sku': 'drk-wat-002'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'count': 0, 'next': None, 'previous': None, 'results': []})
+
+    def test_combines_title_and_sku(self):
+        response = self.client.get(reverse('product-list'), {'title': 'water', 'sku': 'DRK-WAT-001'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([product['id'] for product in response.data['results']], [self.still_water.id])
+
     def test_ignores_unknown_parameters(self):
         response = self.client.get(reverse('product-list'), {'colour': 'blue'})
 

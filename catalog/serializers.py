@@ -34,3 +34,4 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductSearchSerializer(serializers.Serializer):
     title = serializers.CharField(required=False, min_length=3)
+    sku = serializers.CharField(required=False)
