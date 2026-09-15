@@ -7,6 +7,7 @@ from catalog.serializers import CategorySerializer, ProductSerializer
 class CategoryListAPIView(ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    pagination_class = None
 
 
 class ProductListAPIView(ListAPIView):
