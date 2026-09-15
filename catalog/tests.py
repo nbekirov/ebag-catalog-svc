@@ -366,6 +366,24 @@ class ProductCreateTests(APITestCase):
             },
         )
 
+    def test_rejects_short_title(self):
+        category = Category.objects.create(name='Drinks')
+        payload = {
+            'title': 'St',
+            'description': 'Natural spring water',
+            'image_url': 'https://example.com/water.jpg',
+            'sku': 'DRK-WAT-001',
+            'price_cents': 99,
+            'currency': 'EUR',
+            'category_id': category.id,
+        }
+
+        response = self.client.post(reverse('product-list'), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['title'])
+        self.assertFalse(Product.objects.exists())
+
     def test_rejects_missing_required_fields(self):
         response = self.client.post(reverse('product-list'), {'description': 'Natural spring water'})
 

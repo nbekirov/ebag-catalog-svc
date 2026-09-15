@@ -1,3 +1,4 @@
+from django.core.validators import MinLengthValidator
 from django.db import models
 
 
@@ -18,7 +19,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, validators=[MinLengthValidator(3)])
     description = models.TextField(default='', blank=True)
     image_url = models.TextField(null=True, blank=True)
     sku = models.CharField(max_length=255)
