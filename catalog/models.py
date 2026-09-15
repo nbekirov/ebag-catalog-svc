@@ -13,6 +13,14 @@ class Category(models.Model):
     class Meta:
         ordering = ['id']
         verbose_name_plural = 'Categories'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['parent', 'name'],
+                nulls_distinct=False,
+                name='catalog_category_name_unique_per_parent',
+                violation_error_message='Category name must be unique within its parent.',
+            ),
+        ]
 
     def __str__(self):
         return self.name

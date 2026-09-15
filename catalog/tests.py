@@ -218,6 +218,39 @@ class CategoryCreateTests(APITestCase):
             },
         )
 
+    def test_creates_same_name_under_different_parent(self):
+        drinks = Category.objects.create(name='Drinks')
+        food = Category.objects.create(name='Food')
+        Category.objects.create(name='Organic', parent=drinks)
+
+        response = self.client.post(reverse('category-list'), {'name': 'Organic', 'parent_id': food.id})
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Category.objects.filter(name='Organic').count(), 2)
+
+    def test_rejects_duplicate_name_under_same_parent(self):
+        drinks = Category.objects.create(name='Drinks')
+        Category.objects.create(name='Water', parent=drinks)
+
+        response = self.client.post(reverse('category-list'), {'name': 'Water', 'parent_id': drinks.id})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data, {'non_field_errors': ['Category name must be unique within its parent.']}
+        )
+        self.assertEqual(Category.objects.count(), 2)
+
+    def test_rejects_duplicate_top_level_name(self):
+        Category.objects.create(name='Drinks')
+
+        response = self.client.post(reverse('category-list'), {'name': 'Drinks'})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data, {'non_field_errors': ['Category name must be unique within its parent.']}
+        )
+        self.assertEqual(Category.objects.count(), 1)
+
     def test_rejects_short_name(self):
         response = self.client.post(reverse('category-list'), {'name': 'Dr'})
 
@@ -300,6 +333,20 @@ class CategoryUpdateTests(APITestCase):
         response = self.client.put(reverse('category-detail', args=[999]), {'name': 'Drinks'})
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_rejects_renaming_to_sibling_name(self):
+        drinks = Category.objects.create(name='Drinks')
+        Category.objects.create(name='Water', parent=drinks)
+        juice = Category.objects.create(name='Juice', parent=drinks)
+
+        response = self.client.patch(reverse('category-detail', args=[juice.id]), {'name': 'Water'})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data, {'non_field_errors': ['Category name must be unique within its parent.']}
+        )
+        juice.refresh_from_db()
+        self.assertEqual(juice.name, 'Juice')
 
     def test_patches_partially(self):
         drinks = Category.objects.create(name='Drinks')

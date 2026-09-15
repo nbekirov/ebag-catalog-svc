@@ -5,7 +5,7 @@ from catalog.models import Category, Product
 
 class CategorySerializer(serializers.ModelSerializer):
     parent_id = serializers.PrimaryKeyRelatedField(
-        source='parent', queryset=Category.objects.all(), allow_null=True, required=False
+        source='parent', queryset=Category.objects.all(), allow_null=True, default=None
     )
 
     class Meta:
