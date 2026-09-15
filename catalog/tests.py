@@ -258,6 +258,63 @@ class CategoryDetailTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
+class CategoryUpdateTests(APITestCase):
+    def test_updates(self):
+        drinks = Category.objects.create(name='Drinks')
+        water = Category.objects.create(name='Water', parent=drinks)
+
+        response = self.client.put(
+            reverse('category-detail', args=[water.id]), {'name': 'Still Water', 'parent_id': None}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        water.refresh_from_db()
+        self.assertGreater(water.updated_at, water.created_at)
+        self.assertEqual(
+            response.data,
+            {
+                'id': water.id,
+                'name': 'Still Water',
+                'parent_id': None,
+                'created_at': water.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': water.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
+    def test_rejects_missing_name(self):
+        drinks = Category.objects.create(name='Drinks')
+
+        response = self.client.put(reverse('category-detail', args=[drinks.id]), {'parent_id': None})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['name'])
+
+    def test_not_found(self):
+        response = self.client.put(reverse('category-detail', args=[999]), {'name': 'Drinks'})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_patches_partially(self):
+        drinks = Category.objects.create(name='Drinks')
+        water = Category.objects.create(name='Water', parent=drinks)
+
+        response = self.client.patch(reverse('category-detail', args=[water.id]), {'name': 'Still Water'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        water.refresh_from_db()
+        self.assertGreater(water.updated_at, water.created_at)
+        self.assertEqual(
+            response.data,
+            {
+                'id': water.id,
+                'name': 'Still Water',
+                'parent_id': drinks.id,
+                'created_at': water.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': water.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
+
 class ProductCreateTests(APITestCase):
     def test_creates(self):
         category = Category.objects.create(name='Drinks')
@@ -346,3 +403,99 @@ class ProductDetailTests(APITestCase):
         response = self.client.get(reverse('product-detail', args=[999]))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class ProductUpdateTests(APITestCase):
+    def test_updates(self):
+        drinks = Category.objects.create(name='Drinks')
+        water = Category.objects.create(name='Water', parent=drinks)
+        product = Product.objects.create(
+            title='Still Water 1.5L',
+            description='Natural spring water',
+            image_url='https://example.com/water.jpg',
+            sku='DRK-WAT-001',
+            price_cents=99,
+            category=drinks,
+        )
+
+        response = self.client.put(
+            reverse('product-detail', args=[product.id]),
+            {
+                'title': 'Still Water 1.5L, 6-pack',
+                'description': 'Natural spring water, six bottles',
+                'image_url': 'https://example.com/water-6.jpg',
+                'sku': 'DRK-WAT-006',
+                'price_cents': 549,
+                'currency': 'EUR',
+                'category_id': water.id,
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        product.refresh_from_db()
+        self.assertGreater(product.updated_at, product.created_at)
+        self.assertEqual(
+            response.data,
+            {
+                'id': product.id,
+                'title': 'Still Water 1.5L, 6-pack',
+                'description': 'Natural spring water, six bottles',
+                'image_url': 'https://example.com/water-6.jpg',
+                'sku': 'DRK-WAT-006',
+                'price_cents': 549,
+                'price_display': '5.49',
+                'currency': 'EUR',
+                'category_id': water.id,
+                'created_at': product.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': product.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
+    def test_rejects_missing_required_fields(self):
+        category = Category.objects.create(name='Drinks')
+        product = Product.objects.create(
+            title='Still Water 1.5L', sku='DRK-WAT-001', price_cents=99, category=category
+        )
+
+        response = self.client.put(reverse('product-detail', args=[product.id]), {'title': 'Still Water'})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(sorted(response.data), ['category_id', 'price_cents', 'sku'])
+
+    def test_not_found(self):
+        response = self.client.put(reverse('product-detail', args=[999]), {'title': 'Water'})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_patches_partially(self):
+        category = Category.objects.create(name='Drinks')
+        product = Product.objects.create(
+            title='Still Water 1.5L',
+            description='Natural spring water',
+            image_url='https://example.com/water.jpg',
+            sku='DRK-WAT-001',
+            price_cents=99,
+            category=category,
+        )
+
+        response = self.client.patch(reverse('product-detail', args=[product.id]), {'price_cents': 129})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        product.refresh_from_db()
+        self.assertGreater(product.updated_at, product.created_at)
+        self.assertEqual(
+            response.data,
+            {
+                'id': product.id,
+                'title': 'Still Water 1.5L',
+                'description': 'Natural spring water',
+                'image_url': 'https://example.com/water.jpg',
+                'sku': 'DRK-WAT-001',
+                'price_cents': 129,
+                'price_display': '1.29',
+                'currency': 'EUR',
+                'category_id': category.id,
+                'created_at': product.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': product.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
