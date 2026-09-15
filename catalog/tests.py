@@ -315,6 +315,23 @@ class CategoryUpdateTests(APITestCase):
         )
 
 
+class CategoryDeleteTests(APITestCase):
+    def test_deletes(self):
+        drinks = Category.objects.create(name='Drinks')
+        water = Category.objects.create(name='Water', parent=drinks)
+
+        response = self.client.delete(reverse('category-detail', args=[water.id]))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Category.objects.filter(pk=water.id).exists())
+        self.assertTrue(Category.objects.filter(pk=drinks.id).exists())
+
+    def test_not_found(self):
+        response = self.client.delete(reverse('category-detail', args=[999]))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
 class ProductCreateTests(APITestCase):
     def test_creates(self):
         category = Category.objects.create(name='Drinks')
@@ -499,3 +516,27 @@ class ProductUpdateTests(APITestCase):
                 'updated_at': product.updated_at.isoformat().replace('+00:00', 'Z'),
             },
         )
+
+
+class ProductDeleteTests(APITestCase):
+    def test_deletes(self):
+        category = Category.objects.create(name='Drinks')
+        product = Product.objects.create(
+            title='Still Water 1.5L',
+            description='Natural spring water',
+            image_url='https://example.com/water.jpg',
+            sku='DRK-WAT-001',
+            price_cents=99,
+            category=category,
+        )
+
+        response = self.client.delete(reverse('product-detail', args=[product.id]))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Product.objects.filter(pk=product.id).exists())
+        self.assertTrue(Category.objects.filter(pk=category.id).exists())
+
+    def test_not_found(self):
+        response = self.client.delete(reverse('product-detail', args=[999]))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
