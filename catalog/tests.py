@@ -366,6 +366,38 @@ class ProductCreateTests(APITestCase):
             },
         )
 
+    def test_creates_without_image_url(self):
+        category = Category.objects.create(name='Drinks')
+        payload = {
+            'title': 'Still Water 1.5L',
+            'description': 'Natural spring water',
+            'sku': 'DRK-WAT-001',
+            'price_cents': 99,
+            'currency': 'EUR',
+            'category_id': category.id,
+        }
+
+        response = self.client.post(reverse('product-list'), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        product = Product.objects.get()
+        self.assertEqual(
+            response.data,
+            {
+                'id': product.id,
+                'title': 'Still Water 1.5L',
+                'description': 'Natural spring water',
+                'image_url': None,
+                'sku': 'DRK-WAT-001',
+                'price_cents': 99,
+                'price_display': '0.99',
+                'currency': 'EUR',
+                'category_id': category.id,
+                'created_at': product.created_at.isoformat().replace('+00:00', 'Z'),
+                'updated_at': product.updated_at.isoformat().replace('+00:00', 'Z'),
+            },
+        )
+
     def test_rejects_short_title(self):
         category = Category.objects.create(name='Drinks')
         payload = {
@@ -427,6 +459,24 @@ class ProductCreateTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(list(response.data), ['sku'])
         self.assertEqual(Product.objects.count(), 1)
+
+    def test_rejects_invalid_image_url(self):
+        category = Category.objects.create(name='Drinks')
+        payload = {
+            'title': 'Still Water 1.5L',
+            'description': 'Natural spring water',
+            'image_url': 'water.jpg',
+            'sku': 'DRK-WAT-001',
+            'price_cents': 99,
+            'currency': 'EUR',
+            'category_id': category.id,
+        }
+
+        response = self.client.post(reverse('product-list'), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(list(response.data), ['image_url'])
+        self.assertFalse(Product.objects.exists())
 
     def test_rejects_missing_required_fields(self):
         response = self.client.post(reverse('product-list'), {'description': 'Natural spring water'})

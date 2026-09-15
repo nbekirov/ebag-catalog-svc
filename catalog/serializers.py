@@ -14,6 +14,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    image_url = serializers.URLField(allow_null=True, required=False)
     category_id = serializers.PrimaryKeyRelatedField(
         source='category', queryset=Category.objects.all()
     )
