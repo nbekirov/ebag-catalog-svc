@@ -30,3 +30,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'image_url', 'sku', 'price_cents', 'price_display',
             'currency', 'category_id', 'created_at', 'updated_at',
         ]
+
+
+class ProductSearchSerializer(serializers.Serializer):
+    title = serializers.CharField(required=False, min_length=3)

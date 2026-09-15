@@ -183,6 +183,94 @@ class ProductListTests(APITestCase):
         self.assertIsNone(data['next'])
 
 
+class ProductSearchTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        groceries = Category.objects.create(name='Groceries')
+        drinks = Category.objects.create(name='Drinks', parent=groceries)
+        water = Category.objects.create(name='Water', parent=drinks)
+        sparkling = Category.objects.create(name='Sparkling Water', parent=water)
+        juice = Category.objects.create(name='Juice', parent=drinks)
+        fish = Category.objects.create(name='Fish', parent=groceries)
+        fillets = Category.objects.create(name='Fillets', parent=fish)
+        household = Category.objects.create(name='Household')
+        rows = [
+            ('still_water', 'Still Water 1.5L', 'DRK-WAT-001', 99, water),
+            ('sparkling_water', 'Sparkling Water 1.5L', 'DRK-WAT-002', 129, sparkling),
+            ('orange_juice', 'Orange Juice 1L', 'DRK-JUI-001', 349, juice),
+            ('sea_bass', 'Sea Bass Fillet', 'FIS-LAV-FIL-001', 1383, fillets),
+            ('mackerel', 'Скумрия Филе', 'FIS-SKU-FIL-001', 899, fillets),
+            ('dish_soap', 'Dish Soap 500ml', 'HH-SOAP-001', 249, household),
+            ('watermelon', 'Watermelon 1kg', 'GRO-WAT-001', 199, groceries),
+        ]
+        for attr, title, sku, price_cents, category in rows:
+            product = Product.objects.create(
+                title=title,
+                description=f'{title} description',
+                sku=sku,
+                price_cents=price_cents,
+                category=category,
+            )
+            setattr(cls, attr, product)
+
+    def test_lists_everything_without_filters(self):
+        response = self.client.get(reverse('product-list'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 7)
+        self.assertEqual(
+            [product['id'] for product in response.data['results']],
+            [
+                self.still_water.id,
+                self.sparkling_water.id,
+                self.orange_juice.id,
+                self.sea_bass.id,
+                self.mackerel.id,
+                self.dish_soap.id,
+                self.watermelon.id,
+            ],
+        )
+
+    def test_matches_part_of_title(self):
+        response = self.client.get(reverse('product-list'), {'title': 'water'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [product['id'] for product in response.data['results']],
+            [self.still_water.id, self.sparkling_water.id, self.watermelon.id],
+        )
+
+    def test_matches_title_ignoring_case(self):
+        response = self.client.get(reverse('product-list'), {'title': 'скумрия'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([product['id'] for product in response.data['results']], [self.mackerel.id])
+
+    def test_finds_nothing_for_unknown_title(self):
+        response = self.client.get(reverse('product-list'), {'title': 'beer'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'count': 0, 'next': None, 'previous': None, 'results': []})
+
+    def test_rejects_short_title(self):
+        response = self.client.get(reverse('product-list'), {'title': 'wa'})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'title': ['Ensure this field has at least 3 characters.']})
+
+    def test_treats_empty_title_as_absent(self):
+        response = self.client.get(reverse('product-list'), {'title': ''})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 7)
+
+    def test_ignores_unknown_parameters(self):
+        response = self.client.get(reverse('product-list'), {'colour': 'blue'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 7)
+
+
 class CategoryCreateTests(APITestCase):
     def test_creates_top_level(self):
         response = self.client.post(reverse('category-list'), {'name': 'Drinks'})

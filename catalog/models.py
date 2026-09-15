@@ -1,6 +1,8 @@
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.core.validators import MinLengthValidator
 from django.db import models
 from django.db.models.expressions import RawSQL
+from django.db.models.functions import Upper
 
 
 class CategoryQuerySet(models.QuerySet):
@@ -67,6 +69,12 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['id']
+        indexes = [
+            GinIndex(
+                OpClass(Upper('title'), name='gin_trgm_ops'),
+                name='catalog_product_title_trgm',
+            ),
+        ]
 
     def __str__(self):
         return self.title
