@@ -1,0 +1,96 @@
+# Requests against the demo fixture. The writes at the end change it; rerun the seed line from the README to reset.
+
+@host = http://localhost:8000/api/v1
+
+### Categories
+GET {{host}}/categories/
+
+### One category
+GET {{host}}/categories/2/
+
+### Products (paginated)
+GET {{host}}/products/
+
+### One product
+GET {{host}}/products/1/
+
+### Search: title (partial, case-insensitive)
+GET {{host}}/products/?title=wat
+
+### Search: title in Cyrillic
+GET {{host}}/products/?title=филе
+
+### Search: SKU (exact)
+GET {{host}}/products/?sku=DRK-WAT-002
+
+### Search: price range (cents, inclusive)
+GET {{host}}/products/?price_cents_min=129&price_cents_max=349
+
+### Search: category, including subcategories
+GET {{host}}/products/?category=2
+
+### Search: top-level category, paginated
+GET {{host}}/products/?category=1&limit=3
+
+### Search: combined
+GET {{host}}/products/?category=1&title=wat&price_cents_max=150
+
+### Create a category
+POST {{host}}/categories/
+Content-Type: application/json
+
+{"name": "Snacks", "parent_id": 1}
+
+### Rename a category
+PATCH {{host}}/categories/8/
+Content-Type: application/json
+
+{"name": "Home"}
+
+### Move a category (Household under Groceries)
+PATCH {{host}}/categories/8/
+Content-Type: application/json
+
+{"parent_id": 1}
+
+### Duplicate name within a parent → 400
+POST {{host}}/categories/
+Content-Type: application/json
+
+{"name": "Drinks", "parent_id": 1}
+
+### Category as its own descendant → 400
+PATCH {{host}}/categories/1/
+Content-Type: application/json
+
+{"parent_id": 3}
+
+### Delete a category that still has products or subcategories → 409
+DELETE {{host}}/categories/2/
+
+### Create a product
+POST {{host}}/products/
+Content-Type: application/json
+
+{"title": "Crisps 100g", "sku": "SNK-CRI-001", "price_cents": 199, "category_id": 8}
+
+### Change a price
+PATCH {{host}}/products/1/
+Content-Type: application/json
+
+{"price_cents": 105}
+
+### Duplicate SKU → 400
+POST {{host}}/products/
+Content-Type: application/json
+
+{"title": "Another Still Water", "sku": "DRK-WAT-001", "price_cents": 99, "category_id": 3}
+
+### Unknown category → 400
+POST {{host}}/products/
+Content-Type: application/json
+
+{"title": "Orphan", "sku": "ORP-001", "price_cents": 100, "category_id": 999}
+
+### Delete a product
+DELETE {{host}}/products/6/

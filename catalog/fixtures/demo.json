@@ -1,0 +1,187 @@
+[
+  {
+    "model": "catalog.category",
+    "pk": 1,
+    "fields": {
+      "name": "Groceries",
+      "parent": null,
+      "created_at": "2026-09-01T08:00:00Z",
+      "updated_at": "2026-09-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 2,
+    "fields": {
+      "name": "Drinks",
+      "parent": 1,
+      "created_at": "2026-09-01T08:00:00Z",
+      "updated_at": "2026-09-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 3,
+    "fields": {
+      "name": "Water",
+      "parent": 2,
+      "created_at": "2026-09-01T08:00:00Z",
+      "updated_at": "2026-09-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 4,
+    "fields": {
+      "name": "Sparkling Water",
+      "parent": 3,
+      "created_at": "2026-09-01T08:00:00Z",
+      "updated_at": "2026-09-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 5,
+    "fields": {
+      "name": "Juice",
+      "parent": 2,
+      "created_at": "2026-09-01T08:00:00Z",
+      "updated_at": "2026-09-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 6,
+    "fields": {
+      "name": "Fish",
+      "parent": 1,
+      "created_at": "2026-09-01T08:00:00Z",
+      "updated_at": "2026-09-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 7,
+    "fields": {
+      "name": "Fillets",
+      "parent": 6,
+      "created_at": "2026-09-01T08:00:00Z",
+      "updated_at": "2026-09-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 8,
+    "fields": {
+      "name": "Household",
+      "parent": null,
+      "created_at": "2026-09-01T08:00:00Z",
+      "updated_at": "2026-09-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 1,
+    "fields": {
+      "title": "Still Water 1.5L",
+      "description": "Natural spring water",
+      "image_url": "https://example.com/images/drk-wat-001.jpg",
+      "sku": "DRK-WAT-001",
+      "price_cents": 99,
+      "currency": "EUR",
+      "category": 3,
+      "created_at": "2026-09-14T10:00:00Z",
+      "updated_at": "2026-09-14T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 2,
+    "fields": {
+      "title": "Sparkling Water 1.5L",
+      "description": "Carbonated spring water",
+      "image_url": "https://example.com/images/drk-wat-002.jpg",
+      "sku": "DRK-WAT-002",
+      "price_cents": 129,
+      "currency": "EUR",
+      "category": 4,
+      "created_at": "2026-09-14T10:00:00Z",
+      "updated_at": "2026-09-14T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 3,
+    "fields": {
+      "title": "Orange Juice 1L",
+      "description": "100% squeezed, not from concentrate",
+      "image_url": "https://example.com/images/drk-jui-001.jpg",
+      "sku": "DRK-JUI-001",
+      "price_cents": 349,
+      "currency": "EUR",
+      "category": 5,
+      "created_at": "2026-09-14T10:00:00Z",
+      "updated_at": "2026-09-14T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 4,
+    "fields": {
+      "title": "Лаврак Филе Прясно",
+      "description": "Пресен лаврак, ~520g",
+      "image_url": "https://example.com/images/fis-lav-fil-001.jpg",
+      "sku": "FIS-LAV-FIL-001",
+      "price_cents": 1383,
+      "currency": "EUR",
+      "category": 7,
+      "created_at": "2026-09-14T10:00:00Z",
+      "updated_at": "2026-09-14T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 5,
+    "fields": {
+      "title": "Скумрия Филе",
+      "description": "Замразено, ~400g",
+      "image_url": "https://example.com/images/fis-sku-fil-001.jpg",
+      "sku": "FIS-SKU-FIL-001",
+      "price_cents": 899,
+      "currency": "EUR",
+      "category": 7,
+      "created_at": "2026-09-14T10:00:00Z",
+      "updated_at": "2026-09-14T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 6,
+    "fields": {
+      "title": "Dish Soap 500ml",
+      "description": "Lemon scented",
+      "image_url": "https://example.com/images/hh-soap-001.jpg",
+      "sku": "HH-SOAP-001",
+      "price_cents": 249,
+      "currency": "EUR",
+      "category": 8,
+      "created_at": "2026-09-14T10:00:00Z",
+      "updated_at": "2026-09-14T10:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 7,
+    "fields": {
+      "title": "Watermelon 1kg",
+      "description": "Sold by weight",
+      "image_url": "https://example.com/images/gro-wat-001.jpg",
+      "sku": "GRO-WAT-001",
+      "price_cents": 199,
+      "currency": "EUR",
+      "category": 1,
+      "created_at": "2026-09-14T10:00:00Z",
+      "updated_at": "2026-09-14T10:00:00Z"
+    }
+  }
+]
