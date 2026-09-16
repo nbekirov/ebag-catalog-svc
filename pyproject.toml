@@ -13,3 +13,6 @@ dependencies = [
 dev = [
     "ruff>=0.16.7",
 ]
+
+[tool.ruff.lint]
+ignore = ["RUF012"]  # Django Meta / Migration class attributes are plain lists by convention

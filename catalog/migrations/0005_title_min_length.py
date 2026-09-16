@@ -5,15 +5,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('catalog', '0004_order_by_id'),
+        ("catalog", "0004_order_by_id"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='product',
-            name='title',
-            field=models.CharField(max_length=255, validators=[django.core.validators.MinLengthValidator(3)]),
+            model_name="product",
+            name="title",
+            field=models.CharField(
+                max_length=255,
+                validators=[django.core.validators.MinLengthValidator(3)],
+            ),
         ),
     ]

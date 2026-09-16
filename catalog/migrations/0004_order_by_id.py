@@ -4,18 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('catalog', '0003_product'),
+        ("catalog", "0003_product"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='category',
-            options={'ordering': ['id'], 'verbose_name_plural': 'Categories'},
+            name="category",
+            options={"ordering": ["id"], "verbose_name_plural": "Categories"},
         ),
         migrations.AlterModelOptions(
-            name='product',
-            options={'ordering': ['id']},
+            name="product",
+            options={"ordering": ["id"]},
         ),
     ]

@@ -3,12 +3,16 @@ from rest_framework.exceptions import APIException
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 from catalog.models import Category, Product
-from catalog.serializers import CategorySerializer, ProductSearchSerializer, ProductSerializer
+from catalog.serializers import (
+    CategorySerializer,
+    ProductSearchSerializer,
+    ProductSerializer,
+)
 
 
 class CategoryInUse(APIException):
     status_code = 409
-    default_detail = 'Category still has products or child categories.'
+    default_detail = "Category still has products or child categories."
 
 
 class CategoryListAPIView(ListCreateAPIView):
@@ -36,16 +40,16 @@ class ProductListAPIView(ListCreateAPIView):
         search = ProductSearchSerializer(data=self.request.query_params)
         search.is_valid(raise_exception=True)
         params = search.validated_data
-        if 'title' in params:
-            queryset = queryset.filter(title__icontains=params['title'])
-        if 'sku' in params:
-            queryset = queryset.filter(sku=params['sku'])
-        if 'price_cents_min' in params:
-            queryset = queryset.filter(price_cents__gte=params['price_cents_min'])
-        if 'price_cents_max' in params:
-            queryset = queryset.filter(price_cents__lte=params['price_cents_max'])
-        if 'category' in params:
-            queryset = queryset.in_category_tree(params['category'])
+        if "title" in params:
+            queryset = queryset.filter(title__icontains=params["title"])
+        if "sku" in params:
+            queryset = queryset.filter(sku=params["sku"])
+        if "price_cents_min" in params:
+            queryset = queryset.filter(price_cents__gte=params["price_cents_min"])
+        if "price_cents_max" in params:
+            queryset = queryset.filter(price_cents__lte=params["price_cents_max"])
+        if "category" in params:
+            queryset = queryset.in_category_tree(params["category"])
         return queryset
 
 

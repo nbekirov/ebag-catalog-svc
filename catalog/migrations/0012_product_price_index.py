@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('catalog', '0011_product_title_search_index'),
+        ("catalog", "0011_product_title_search_index"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='product',
-            name='price_cents',
+            model_name="product",
+            name="price_cents",
             field=models.PositiveIntegerField(db_index=True),
         ),
     ]

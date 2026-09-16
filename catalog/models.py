@@ -46,7 +46,7 @@ class ProductQuerySet(models.QuerySet):
 class Category(models.Model):
     name = models.CharField(max_length=255, validators=[MinLengthValidator(3)])
     parent = models.ForeignKey(
-        'self', null=True, blank=True, on_delete=models.PROTECT, related_name='children'
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="children"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -54,14 +54,14 @@ class Category(models.Model):
     objects = CategoryQuerySet.as_manager()
 
     class Meta:
-        ordering = ['id']
-        verbose_name_plural = 'Categories'
+        ordering = ["id"]
+        verbose_name_plural = "Categories"
         constraints = [
             models.UniqueConstraint(
-                fields=['parent', 'name'],
+                fields=["parent", "name"],
                 nulls_distinct=False,
-                name='catalog_category_name_unique_per_parent',
-                violation_error_message='Category name must be unique within its parent.',
+                name="catalog_category_name_unique_per_parent",
+                violation_error_message="Category name must be unique within its parent.",
             ),
         ]
 
@@ -74,26 +74,32 @@ class Category(models.Model):
 
 class Product(models.Model):
     class Currency(models.TextChoices):
-        EUR = 'EUR', 'Euro'
+        EUR = "EUR", "Euro"
 
     title = models.CharField(max_length=255, validators=[MinLengthValidator(3)])
-    description = models.TextField(default='', blank=True)
+    description = models.TextField(default="", blank=True)
     image_url = models.TextField(null=True, blank=True)
-    sku = models.CharField(max_length=255, unique=True, validators=[MinLengthValidator(3)])
+    sku = models.CharField(
+        max_length=255, unique=True, validators=[MinLengthValidator(3)]
+    )
     price_cents = models.PositiveIntegerField(db_index=True)
-    currency = models.CharField(max_length=3, choices=Currency.choices, default=Currency.EUR)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products')
+    currency = models.CharField(
+        max_length=3, choices=Currency.choices, default=Currency.EUR
+    )
+    category = models.ForeignKey(
+        Category, on_delete=models.PROTECT, related_name="products"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = ProductQuerySet.as_manager()
 
     class Meta:
-        ordering = ['id']
+        ordering = ["id"]
         indexes = [
             GinIndex(
-                OpClass(Upper('title'), name='gin_trgm_ops'),
-                name='catalog_product_title_trgm',
+                OpClass(Upper("title"), name="gin_trgm_ops"),
+                name="catalog_product_title_trgm",
             ),
         ]
 
@@ -103,4 +109,4 @@ class Product(models.Model):
     @property
     def price_display(self):
         units, cents = divmod(self.price_cents, 100)
-        return f'{units}.{cents:02d}'
+        return f"{units}.{cents:02d}"

@@ -7,15 +7,19 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('catalog', '0010_unique_category_name_per_parent'),
+        ("catalog", "0010_unique_category_name_per_parent"),
     ]
 
     operations = [
         django.contrib.postgres.operations.TrigramExtension(),
         migrations.AddIndex(
-            model_name='product',
-            index=django.contrib.postgres.indexes.GinIndex(django.contrib.postgres.indexes.OpClass(django.db.models.functions.text.Upper('title'), name='gin_trgm_ops'), name='catalog_product_title_trgm'),
+            model_name="product",
+            index=django.contrib.postgres.indexes.GinIndex(
+                django.contrib.postgres.indexes.OpClass(
+                    django.db.models.functions.text.Upper("title"), name="gin_trgm_ops"
+                ),
+                name="catalog_product_title_trgm",
+            ),
         ),
     ]

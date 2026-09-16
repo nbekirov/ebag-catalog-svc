@@ -4,20 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('catalog', '0006_unique_sku'),
+        ("catalog", "0006_unique_sku"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='product',
-            name='currency',
-            field=models.CharField(choices=[('EUR', 'Euro')], default='EUR', max_length=3),
+            model_name="product",
+            name="currency",
+            field=models.CharField(
+                choices=[("EUR", "Euro")], default="EUR", max_length=3
+            ),
         ),
         migrations.AlterField(
-            model_name='product',
-            name='price_cents',
+            model_name="product",
+            name="price_cents",
             field=models.PositiveIntegerField(),
         ),
     ]

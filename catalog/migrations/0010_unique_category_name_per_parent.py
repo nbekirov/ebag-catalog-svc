@@ -4,14 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('catalog', '0009_protect_category_references'),
+        ("catalog", "0009_protect_category_references"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='category',
-            constraint=models.UniqueConstraint(fields=('parent', 'name'), name='catalog_category_name_unique_per_parent', nulls_distinct=False, violation_error_message='Category name must be unique within its parent.'),
+            model_name="category",
+            constraint=models.UniqueConstraint(
+                fields=("parent", "name"),
+                name="catalog_category_name_unique_per_parent",
+                nulls_distinct=False,
+                violation_error_message="Category name must be unique within its parent.",
+            ),
         ),
     ]
